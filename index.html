@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Présent Parfait!</title>
+    <style>
+        /* Reset and body styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            background: linear-gradient(270deg, #ff7e5f, #feb47b, #86a8e7, #91eae4);
+            background-size: 800% 800%;
+            animation: gradientMove 12s ease infinite;
+            color: white;
+            text-align: center;
+        }
+
+        /* Gradient animation */
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: move 10s infinite;
+        }
+
+        /* Animation for moving shapes */
+        @keyframes move {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(100vw, 100vh); }
+            100% { transform: translate(0, 0); }
+        }
+
+        h1 {
+            margin-top: 20px;
+            font-size: 3em;
+        }
+
+        #game-container {
+            margin-top: 100px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            background-color: #ff6f61;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #ff4c3b;
+        }
+
+        #question {
+            margin: 20px 0;
+            font-size: 1.5em;
+        }
+
+        #answer {
+            margin: 20px 0;
+            font-size: 1.2em;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 1em;
+            border-radius: 5px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Bienvenue à Présent Parfait!</h1>
+    <div id="game-container">
+        <div id="question">Cliquez sur le bouton pour commencer le jeu!</div>
+        <button onclick="startGame()">Commencer le Jeu</button>
+        <div id="answer"></div>
+    </div>
+
+    <div id="background"></div>
+
+    <script>
+        const shapesCount = 10;
+        const background = document.getElementById('background');
+
+        // Create moving shapes in the background
+        for (let i = 0; i < shapesCount; i++) {
+            const shape = document.createElement('div');
+            shape.className = 'shape';
+            shape.style.width = Math.random() * 100 + 'px';
+            shape.style.height = shape.style.width;
+            shape.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            shape.style.top = Math.random() * 100 + 'vh';
+            shape.style.left = Math.random() * 100 + 'vw';
+            shape.style.animationDuration = Math.random() * 10 + 5 + 's';
+            background.appendChild(shape);
+        }
+
+        function startGame() {
+            const questions = [
+                { question: "Je (manger) _______ une pomme.", answer: "mange" },
+                { question: "Nous (aller) _______ au cinéma.", answer: "allons" },
+                { question: "Elle (danser) _______ à la fête.", answer: "danse" },
+                { question: "Tu (finir) _______ tes devoirs.", answer: "finis" },
+                { question: "Ils (prendre) _______ le bus.", answer: "prennent" },
+                { question: "Nous (être) _______ heureux.", answer: "sommes" },
+                { question: "Je (avoir) _______ un chien.", answer: "ai" },
+                { question: "Vous (faire) _______ du sport.", answer: "faites" },
+                { question: "Il (parler) _______ français.", answer: "parle" },
+                { question: "Elles (choisir) _______ une robe.", answer: "choisissent" }
+            ];
+
+            const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+            document.getElementById('question').innerText = randomQuestion.question;
+            document.getElementById('answer').innerHTML = `
+                <input type="text" id="userAnswer" placeholder="Votre réponse...">
+                <button onclick="checkAnswer('${randomQuestion.answer}')">Vérifier</button>`;
+        }
+
+        function checkAnswer(correctAnswer) {
+            const userAnswer = document.getElementById('userAnswer').value.trim().toLowerCase();
+            const answerDiv = document.getElementById('answer');
+            if (!userAnswer) {
+                answerDiv.innerHTML = "<p style='color: yellow;'>Veuillez entrer une réponse!</p>";
+                return;
+            }
+
+            if (userAnswer === correctAnswer.toLowerCase()) {
+                answerDiv.innerHTML = "<p style='color: lightgreen;'>Correct! 🎉</p>";
+            } else {
+                answerDiv.innerHTML = `<p style='color: red;'>Incorrect! La bonne réponse est: ${correctAnswer}.</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
