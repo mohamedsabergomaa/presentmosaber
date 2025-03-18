@@ -52,41 +52,155 @@
         h1 {
             margin-top: 20px;
             font-size: 3em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
 
         #game-container {
-            margin-top: 100px;
+            margin: 40px auto;
+            max-width: 800px;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
         button {
-            padding: 10px 20px;
+            padding: 12px 24px;
             font-size: 1.2em;
             background-color: #ff6f61;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s;
+            margin: 10px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
         button:hover {
             background-color: #ff4c3b;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .disabled:hover {
+            background-color: #cccccc;
+            transform: none;
         }
 
         #question {
             margin: 20px 0;
             font-size: 1.5em;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            min-height: 60px;
+        }
+
+        #progress-container {
+            margin: 20px auto;
+            width: 80%;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            height: 20px;
+        }
+
+        #progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            background-color: #4CAF50;
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+        #score-container {
+            font-size: 1.2em;
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+
+        .score-item {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 10px 20px;
+            border-radius: 10px;
         }
 
         #answer {
             margin: 20px 0;
-            font-size: 1.2em;
+            min-height: 80px;
         }
 
         input[type="text"] {
-            padding: 10px;
-            font-size: 1em;
+            padding: 12px;
+            font-size: 1.2em;
             border-radius: 5px;
             border: none;
+            width: 200px;
+            text-align: center;
+            margin-right: 10px;
+        }
+
+        #results {
+            margin: 20px 0;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-weight: bold;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .correct {
+            background-color: rgba(76, 175, 80, 0.5);
+        }
+
+        .incorrect {
+            background-color: rgba(244, 67, 54, 0.5);
+        }
+
+        #next-button {
+            background-color: #4CAF50;
+        }
+
+        #next-button:hover {
+            background-color: #3e8e41;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+            
+            #game-container {
+                padding: 15px;
+                margin: 20px 10px;
+            }
+            
+            input[type="text"] {
+                width: 150px;
+            }
         }
     </style>
 </head>
@@ -94,18 +208,55 @@
 
     <h1>Bienvenue à Présent Parfait!</h1>
     <div id="game-container">
+        <div id="score-container">
+            <div class="score-item">Question: <span id="question-number">0</span>/<span id="total-questions">0</span></div>
+            <div class="score-item">Score: <span id="score">0</span></div>
+        </div>
+        
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+        
         <div id="question">Cliquez sur le bouton pour commencer le jeu!</div>
-        <button onclick="startGame()">Commencer le Jeu</button>
-        <div id="answer"></div>
+        <div id="answer">
+            <button id="start-button" onclick="startGame()">Commencer le Jeu</button>
+        </div>
+        
+        <div id="results"></div>
     </div>
 
     <div id="background"></div>
 
     <script>
+        // Game variables
+        const questions = [
+            { question: "Je (manger) _______ une pomme.", answer: "mange", hint: "1ère personne du singulier - verbe régulier en -er" },
+            { question: "Nous (aller) _______ au cinéma.", answer: "allons", hint: "1ère personne du pluriel - verbe irrégulier" },
+            { question: "Elle (danser) _______ à la fête.", answer: "danse", hint: "3ème personne du singulier - verbe régulier en -er" },
+            { question: "Tu (finir) _______ tes devoirs.", answer: "finis", hint: "2ème personne du singulier - verbe régulier en -ir" },
+            { question: "Ils (prendre) _______ le bus.", answer: "prennent", hint: "3ème personne du pluriel - verbe irrégulier" },
+            { question: "Nous (être) _______ heureux.", answer: "sommes", hint: "1ère personne du pluriel - verbe être" },
+            { question: "Je (avoir) _______ un chien.", answer: "ai", hint: "1ère personne du singulier - verbe avoir" },
+            { question: "Vous (faire) _______ du sport.", answer: "faites", hint: "2ème personne du pluriel - verbe irrégulier" },
+            { question: "Il (parler) _______ français.", answer: "parle", hint: "3ème personne du singulier - verbe régulier en -er" },
+            { question: "Elles (choisir) _______ une robe.", answer: "choisissent", hint: "3ème personne du pluriel - verbe régulier en -ir" },
+            { question: "Tu (vouloir) _______ un gâteau.", answer: "veux", hint: "2ème personne du singulier - verbe irrégulier" },
+            { question: "Je (pouvoir) _______ t'aider.", answer: "peux", hint: "1ère personne du singulier - verbe irrégulier" },
+            { question: "Nous (venir) _______ de Paris.", answer: "venons", hint: "1ère personne du pluriel - verbe irrégulier" },
+            { question: "Vous (voir) _______ le film.", answer: "voyez", hint: "2ème personne du pluriel - verbe irrégulier" },
+            { question: "Ils (dire) _______ la vérité.", answer: "disent", hint: "3ème personne du pluriel - verbe irrégulier" }
+        ];
+        
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let gameStarted = false;
+        let totalQuestions = questions.length;
+        let incorrectAnswers = [];
+        
+        // Create moving shapes in the background
         const shapesCount = 10;
         const background = document.getElementById('background');
 
-        // Create moving shapes in the background
         for (let i = 0; i < shapesCount; i++) {
             const shape = document.createElement('div');
             shape.className = 'shape';
@@ -118,40 +269,158 @@
             background.appendChild(shape);
         }
 
-        function startGame() {
-            const questions = [
-                { question: "Je (manger) _______ une pomme.", answer: "mange" },
-                { question: "Nous (aller) _______ au cinéma.", answer: "allons" },
-                { question: "Elle (danser) _______ à la fête.", answer: "danse" },
-                { question: "Tu (finir) _______ tes devoirs.", answer: "finis" },
-                { question: "Ils (prendre) _______ le bus.", answer: "prennent" },
-                { question: "Nous (être) _______ heureux.", answer: "sommes" },
-                { question: "Je (avoir) _______ un chien.", answer: "ai" },
-                { question: "Vous (faire) _______ du sport.", answer: "faites" },
-                { question: "Il (parler) _______ français.", answer: "parle" },
-                { question: "Elles (choisir) _______ une robe.", answer: "choisissent" }
-            ];
-
-            const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
-            document.getElementById('question').innerText = randomQuestion.question;
-            document.getElementById('answer').innerHTML = `
-                <input type="text" id="userAnswer" placeholder="Votre réponse...">
-                <button onclick="checkAnswer('${randomQuestion.answer}')">Vérifier</button>`;
+        // Update the display of question numbers and total
+        function updateQuestionCounter() {
+            document.getElementById('question-number').innerText = currentQuestionIndex + 1;
+            document.getElementById('total-questions').innerText = totalQuestions;
+            
+            // Update progress bar
+            const progressPercentage = ((currentQuestionIndex) / totalQuestions) * 100;
+            document.getElementById('progress-bar').style.width = progressPercentage + '%';
         }
 
-        function checkAnswer(correctAnswer) {
+        // Start the game
+        function startGame() {
+            gameStarted = true;
+            score = 0;
+            currentQuestionIndex = 0;
+            incorrectAnswers = [];
+            
+            document.getElementById('score').innerText = score;
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('start-button').style.display = 'none';
+            
+            showQuestion();
+        }
+
+        // Display the current question
+        function showQuestion() {
+            if (currentQuestionIndex >= totalQuestions) {
+                endGame();
+                return;
+            }
+            
+            updateQuestionCounter();
+            
+            const currentQuestion = questions[currentQuestionIndex];
+            document.getElementById('question').innerText = currentQuestion.question;
+            document.getElementById('answer').innerHTML = `
+                <input type="text" id="userAnswer" placeholder="Votre réponse..." autofocus>
+                <button onclick="checkAnswer()">Vérifier</button>
+                <button id="hint-button" onclick="showHint()">Indice</button>`;
+                
+            // Add enter key event listener to input
+            document.getElementById('userAnswer').addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    checkAnswer();
+                }
+            });
+        }
+
+        // Show hint for current question
+        function showHint() {
+            const hintButton = document.getElementById('hint-button');
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            // Create or update hint display
+            let hintDisplay = document.getElementById('hint-display');
+            if (!hintDisplay) {
+                hintDisplay = document.createElement('div');
+                hintDisplay.id = 'hint-display';
+                hintDisplay.style.backgroundColor = 'rgba(255, 193, 7, 0.5)';
+                hintDisplay.style.padding = '10px';
+                hintDisplay.style.borderRadius = '5px';
+                hintDisplay.style.marginTop = '10px';
+                document.getElementById('answer').appendChild(hintDisplay);
+            }
+            
+            hintDisplay.innerText = "Indice: " + currentQuestion.hint;
+            hintButton.disabled = true;
+            hintButton.classList.add('disabled');
+        }
+
+        // Check the user's answer
+        function checkAnswer() {
             const userAnswer = document.getElementById('userAnswer').value.trim().toLowerCase();
+            const currentQuestion = questions[currentQuestionIndex];
             const answerDiv = document.getElementById('answer');
+            
             if (!userAnswer) {
-                answerDiv.innerHTML = "<p style='color: yellow;'>Veuillez entrer une réponse!</p>";
+                answerDiv.innerHTML += "<p class='feedback incorrect'>Veuillez entrer une réponse!</p>";
+                setTimeout(() => {
+                    showQuestion();
+                }, 1500);
                 return;
             }
 
-            if (userAnswer === correctAnswer.toLowerCase()) {
-                answerDiv.innerHTML = "<p style='color: lightgreen;'>Correct! 🎉</p>";
+            let feedbackClass = 'incorrect';
+            let feedbackMessage = `Incorrect! La bonne réponse est: <strong>${currentQuestion.answer}</strong>.`;
+            
+            if (userAnswer === currentQuestion.answer.toLowerCase()) {
+                score++;
+                document.getElementById('score').innerText = score;
+                feedbackClass = 'correct';
+                feedbackMessage = "Correct! 🎉";
             } else {
-                answerDiv.innerHTML = `<p style='color: red;'>Incorrect! La bonne réponse est: ${correctAnswer}.</p>`;
+                incorrectAnswers.push({
+                    question: currentQuestion.question,
+                    correctAnswer: currentQuestion.answer,
+                    userAnswer: userAnswer
+                });
             }
+            
+            answerDiv.innerHTML = `<div class="feedback ${feedbackClass}">${feedbackMessage}</div>`;
+            
+            // Move to next question after brief delay
+            setTimeout(() => {
+                currentQuestionIndex++;
+                showQuestion();
+            }, 1500);
+        }
+
+        // End the game and show results
+        function endGame() {
+            const resultsDiv = document.getElementById('results');
+            const percentage = Math.round((score / totalQuestions) * 100);
+            let resultsMessage = `
+                <h2>Résultats Finaux</h2>
+                <p>Votre score: ${score}/${totalQuestions} (${percentage}%)</p>`;
+                
+            if (percentage === 100) {
+                resultsMessage += `<p>Parfait! Vous avez tout correct! 🎉🎉🎉</p>`;
+            } else if (percentage >= 80) {
+                resultsMessage += `<p>Excellent travail! 🎉</p>`;
+            } else if (percentage >= 60) {
+                resultsMessage += `<p>Bon travail! Continuez à pratiquer!</p>`;
+            } else {
+                resultsMessage += `<p>Continuez à pratiquer les conjugaisons!</p>`;
+            }
+            
+            if (incorrectAnswers.length > 0) {
+                resultsMessage += `
+                    <h3>Réponses incorrectes:</h3>
+                    <ul style="list-style-type: none; padding: 0;">`;
+                    
+                incorrectAnswers.forEach(item => {
+                    resultsMessage += `
+                        <li style="margin: 10px 0; text-align: left; background-color: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px;">
+                            Question: ${item.question}<br>
+                            Votre réponse: <span style="color: #ff6b6b;">${item.userAnswer}</span><br>
+                            Réponse correcte: <span style="color: #69db7c;">${item.correctAnswer}</span>
+                        </li>`;
+                });
+                
+                resultsMessage += `</ul>`;
+            }
+            
+            resultsMessage += `
+                <button onclick="startGame()">Rejouer</button>`;
+                
+            resultsDiv.innerHTML = resultsMessage;
+            resultsDiv.style.display = 'block';
+            
+            document.getElementById('question').innerText = "Jeu terminé!";
+            document.getElementById('answer').innerHTML = "";
         }
     </script>
 </body>
